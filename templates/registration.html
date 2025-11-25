@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration Form</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body class="class">
+     <nav class="navbar">
+            <a href="/" class="logo">Phishing Detection Url System</a>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="login">Login</a></li>
+                <li><a href="register">Registration</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </nav>
+    <div  class="class1">
+        <form method="POST" action="/register">
+        <fieldset><legend><h1>Registration Form</h1></legend>
+        <label for="name">Name:</label><br>
+        <input class="class2" type="text" id="name" name="name" required><br><br>
+        <label for="email">Email:</label><br>
+        <input class="class2" type="email" id="email" name="email" required><br><br>
+        <label for="phone">Phone Number:</label><br>
+        <input class="class2" type="text" id="phone" name="phone"><br><br>
+        <label for="password">Password:</label><br>
+        <input class="class2" type="password" id="password" name="password" required><br><br>
+        <input class="class2" type="submit" value="Register">
+        </fieldset>
+        </form>
+    </div>   
+    <p id="message"></p>
+    <script>
+        async function register(){
+            const data = {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                password: document.getElementById('password').value
+            };
+            const response = await fetch('/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+            const result = await response.json();
+            document.getElementById('message').innerHTML = result.message || result.error;
+            if (response.status === 201) {
+                window.location.href = '/login';
+            }
+        }
+    </script> 
+</body>
+</html>

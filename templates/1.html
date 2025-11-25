@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="1.css">
+    <script src="1.js"></script>
+</head>
+
+<body> 
+<h2>Dashboard</h2>
+
+<div id="stats"></div>
+
+<h3>URL Safety Pie Chart</h3>
+<canvas id="pieChart" width="400" height="300"></canvas>
+
+<h3>URL Safety Bar Chart</h3>
+<canvas id="barChart" width="400" height="300"></canvas>
+
+<h3>Recent URLs</h3>
+<table border="1" width="100%">
+    <thead>
+        <tr>
+            <th>URL</th>
+          <th>Status</th>
+        </tr>
+    </thead>
+    <tbody id="recent"></tbody>
+</table>
+
+<p id="msg"></p>
+
+<script>
+async function loadDashboard() {
+    const res = await fetch("http://127.0.0.1:5000/dashboard");
+
+    if (res.status === 401) {
+        document.getElementById("msg").innerHTML = "You must login first.";
+        window.location.href = "login.html";
+        return;
+    }
+
+    const data = await res.json();
+
+    document.getElementById("stats").innerHTML = `
+        <p>Total URLs: ${data.total}</p>
+        <p>Safe: ${data.safe}%</p>
+        <p>Phishing: ${data.phishing}%</p>
+        <p>Other: ${data.other}%</p>
+    `;
+
+    let rows = "";
+    data.recent.forEach(r => {
+        rows += <tr><td>${r.url}</td><td>${r.result}</td></tr>;
+    });
+    document.getElementById("recent").innerHTML = rows;
+
+    // PIE CHART
+    new Chart(document.getElementById("pieChart"), {
+        type: 'pie',
+        data: {
+            labels: ["Safe", "Phishing", "Other"],
+            datasets: [{ data: [data.safe, data.phishing, data.other] }]
+        }
+    });
+
+    // BAR CHART
+    new Chart(document.getElementById("barChart"), {
+        type: 'bar',
+        data: {
+            labels: ["Safe", "Phishing", "Other"],
+            datasets: [{ data: [data.safe, data.phishing, data.other] }]
+        }
+    });
+}
+
+loadDashboard();
+</script>
+
+</body>
+</html>

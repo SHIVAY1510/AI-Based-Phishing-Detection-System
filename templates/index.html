@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phising Website Detection</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+     <nav class="navbar">
+            <a href="/" class="logo">Phishing Detection Url System</a>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="login">Login</a></li>
+                <li><a href="register">Registration</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </nav>
+    <div class="class">
+        <form method="POST">
+            <label for="url">Check URL</label><br/>
+            <input type="text" id="url" name="url" required><br/><br/>
+            <button>Click Here</button><br/><br/>
+            {{prediction}}
+        </form>
+    </div>
+</body>
+</html>
