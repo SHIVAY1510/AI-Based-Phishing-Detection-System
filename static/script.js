@@ -16,3 +16,10 @@ window.addEventListener('scroll',()=>{
     navbar.style.backgroundColor='rgba(10,10,10,0.98)':
     navbar.style.backgroundColor='rgba(10,10,10,0.95)';
 })
+
+
+document.getElementById("aboutLink").addEventListener("click", function(event) {
+    event.preventDefault(); // stop page scrolling
+    const box = document.getElementById("aboutBox");
+    box.classList.toggle("hidden");
+});

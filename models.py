@@ -30,3 +30,5 @@ class URLRecord(db.Model):
     url = db.Column(db.String(350), nullable=False)
     result = db.Column(db.String(50), nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    #password=db.Column(db.String(25),nullable=False)
+    #email=db.Column(db.String(50), nullable=False)
