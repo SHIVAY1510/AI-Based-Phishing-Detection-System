@@ -3,7 +3,7 @@ import os
 class Config:
     SQLALCHEMY_DATABASE_URL = "postgresql://postgres:1234@localhost/Database_URL"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SCERET_KEY = "d17a6822af9ea28fe8752ac86d327113"
+    SECRET_KEY = "d17a6822af9ea28fe8752ac86d327113"
 
     #MAIL_SERVER = 'smtp.gmail.com'
     #MAIL_PORT = 587

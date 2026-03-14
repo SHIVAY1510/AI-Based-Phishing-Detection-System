@@ -3,6 +3,7 @@ from db import init_db, db
 from auth import auth
 from models import User, URLRecord
 from url_routes import urls
+from utils import get_gravatar_url, get_ui_avatar_url, get_google_profile_picture
 import os
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, url_for, redirect, flash
@@ -19,8 +20,9 @@ from itsdangerous import URLSafeTimedSerializer
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = Config.SCERET_KEY
+app.secret_key = Config.SECRET_KEY
 
+# Configure mail
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
@@ -28,14 +30,18 @@ app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME', '')
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD', '')
 app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_USERNAME', 'noreply@example.com')
 
+# Configure database
+app.config['SQLALCHEMY_DATABASE_URI'] = Config.SQLALCHEMY_DATABASE_URL
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = Config.SQLALCHEMY_TRACK_MODIFICATIONS
+
 app.config.from_object(Config)
 mail = Mail(app)
 
 # Debug: Check if mail config is loaded
 if not app.config['MAIL_USERNAME']:
-    print("⚠️  WARNING: MAIL_USERNAME not set. Email features will not work. Set it in .env file.")
+    print("WARNING: MAIL_USERNAME not set. Email features will not work. Set it in .env file.")
 else:
-    print(f"✓ Mail configured for: {app.config['MAIL_USERNAME']}")
+    print(f"Mail configured for: {app.config['MAIL_USERNAME']}")
 
 # Load ML artifacts safely so missing pickles don't crash the whole app at import time.
 vector = None
@@ -66,29 +72,52 @@ def verify_reset_token(token, expiration=3600): #valid for (3600s) i.e. 1 hour
     except Exception as e:
         return None
 
-def mailSetup():
-    app.config['MAIL_SERVER']='smtp.gmail.com'
-    app.config['MAIL_PORT']=587
-    app.config['MAIL_USE_TLS']=True
-    app.config['MAIL_USERNAME']= os.getenv('MAIL_USERNAME')
-    app.config['MAIL_PASSWORD']= os.getenv('MAIL_PASSWORD')
-    mail= Mail(app)
-    return mail
-mail=mailSetup()
+#def mailSetup():
+ #   app.config['MAIL_SERVER']='smtp.gmail.com'
+  #  app.config['MAIL_PORT']=587
+   # app.config['MAIL_USE_TLS']=True
+   # app.config['MAIL_USERNAME']= os.getenv('MAIL_USERNAME')
+   # app.config['MAIL_PASSWORD']= os.getenv('MAIL_PASSWORD')
+   # mail= Mail(app)
+   # return mail
+#mail=mailSetup()
 @app.route('/reset-password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
     email = verify_reset_token(token)
     if not email:
-        return "Token expired or invalid"
+        flash("Token expired or invalid", "error")
+        return redirect(url_for('forgot_password'))
 
     user = User.query.filter_by(email=email).first()
+    if not user:
+        flash("User not found", "error")
+        return redirect(url_for('forgot_password'))
 
     if request.method == 'POST':
         new_password = request.form.get('new_password')
-        user.set_password(new_password)
-        db.session.commit()
-        flash("Password updated successfully", "success")
-        return redirect(url_for('login'))
+        confirm_password = request.form.get('confirm_password')
+        
+        if not new_password or not confirm_password:
+            flash("Both password fields are required", "error")
+            return render_template("reset_password.html", token=token)
+        
+        if new_password != confirm_password:
+            flash("Passwords do not match", "error")
+            return render_template("reset_password.html", token=token)
+        
+        if len(new_password) < 6:
+            flash("Password must be at least 6 characters long", "error")
+            return render_template("reset_password.html", token=token)
+        
+        try:
+            user.set_password(new_password)
+            db.session.commit()
+            flash("Password updated successfully", "success")
+            return redirect(url_for('login'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Error updating password: {str(e)}", "error")
+            return render_template("reset_password.html", token=token)
 
     return render_template("reset_password.html", token=token)
 
@@ -96,10 +125,6 @@ def reset_password(token):
 @app.route("/")
 def home():
     return render_template("homepage.html")  # Ensure you have an index.html file in the templates folder 
-
-@app.route("/about")
-def about():
-    return render_template("about.html")
 
 @app.route("/url", methods=["GET", "POST"])
 @login_required
@@ -135,10 +160,10 @@ def url():
                 save = URLRecord(user_id=current_user.id, url=url_input, result=my_prediction)
                 db.session.add(save)
                 db.session.commit()
-                print(f'✓ Saved URL record for user {current_user.id}')
+                print(f'[OK] Saved URL record for user {current_user.id}')
             except Exception as e:
                 db.session.rollback()
-                print(f'✗ Error saving URLRecord: {e}')
+                print(f'[ERROR] Error saving URLRecord: {e}')
         else:
             print(f'Not logged in. current_user: {current_user}, authenticated: {getattr(current_user, "is_authenticated", False)}')
 
@@ -160,21 +185,52 @@ def forgot_password():
         token = generate_reset_token(email)
         reset_link = url_for('reset_password', token=token, _external=True)
 
+        # Check if email config is set
+        if not app.config.get('MAIL_USERNAME'):
+            print("[ERROR] Email configuration error: MAIL_USERNAME not set")
+            flash("Email service is not configured. Please contact administrator.", "error")
+            return redirect(url_for('forgot_password'))
+
         msg = Message(
-            "Password Reset",
+            subject="Password Reset Request - Phishing Detection URL System",
             sender=app.config['MAIL_USERNAME'],
             recipients=[email]
         )
-        msg.body = f"Click to reset password:\n{reset_link}"
+        msg.body = f"""Hello,
+
+You requested a password reset for your account. Click the link below to reset your password:
+
+{reset_link}
+
+This link will expire in 1 hour.
+
+If you did not request this, please ignore this email.
+
+Best regards,
+Phishing Detection URL System Team"""
+        
+        msg.html = f"""
+<html>
+  <body>
+    <p>Hello,</p>
+    <p>You requested a password reset for your account. Click the link below to reset your password:</p>
+    <p><a href="{reset_link}" style="background-color: #2ecc72; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a></p>
+    <p>This link will expire in 1 hour.</p>
+    <p>If you did not request this, please ignore this email.</p>
+    <p>Best regards,<br>Phishing Detection URL System Team</p>
+  </body>
+</html>"""
+        
         try:
             mail.send(msg)
+            print(f"[OK] Password reset email sent successfully to {email}")
             flash("Password reset link sent to your email. Check your inbox or spam folder.", "success")
+            return redirect(url_for('login'))
         except Exception as e:
-            print("Mail error:", e)
-            flash(f"Error sending email. Please try again. Error: {str(e)}", "error")
+            print(f"[ERROR] Mail error: {e}")
+            print(f"Mail config - Server: {app.config.get('MAIL_SERVER')}, Port: {app.config.get('MAIL_PORT')}, Username: {app.config.get('MAIL_USERNAME')}")
+            flash(f"Error sending email. Please try again later. Error: {str(e)}", "error")
             return redirect(url_for('forgot_password'))
-        
-        return redirect(url_for('login'))
 
     return render_template("reset_password.html")
 
@@ -188,32 +244,28 @@ def register():
         
         # Validate inputs (phone is optional)
         if not all([name, email, password]):
-            flash("Name, email and password are required", "error")
-            return redirect(url_for('register'))
+            return "Name, email and password are required", 400
         
         # Check if user already exists
         if User.query.filter_by(email=email).first():
-            flash("Email already registered. Please use a different email or login.", "error")
-            return redirect(url_for('register'))
+            return "Email already registered", 400
         if User.query.filter_by(phone=phone).first():
-            flash("Phone number already registered. Please use a different phone number.", "error")
-            return redirect(url_for('register'))
+            return "Phone already registered", 400
         
         try:
             user = User(name=name, email=email, phone=phone)
             user.set_password(password)
             db.session.add(user)        
             db.session.commit()
-            print(f"✓ Registered user id={user.id} email={user.email}")
+            print(f"[OK] Registered user id={user.id} email={user.email}")
             # Auto-login after registration
             login_user(user)
-            flash("Successfully registered! Redirecting to login...", "success")
+            flash("Successfully Registered")
             return redirect(url_for("login"))
         except Exception as e:
             db.session.rollback()
             print(f"Registration error: {e}")
-            flash(f"Registration failed: {str(e)}", "error")
-            return redirect(url_for('register'))
+            return f"Registration failed: {e}", 500
     return render_template("registration.html")
 
 @app.route("/login",methods=["GET", "POST"])
@@ -259,13 +311,8 @@ def dashboard():
     # Recent 10 searches
     recent_searches = URLRecord.query.filter_by(user_id=current_user.id).order_by(URLRecord.timestamp.desc()).limit(10).all()
 
-    # Fetch last 5 searches of the logged-in user
-    recent_searches = (
-        URLRecord.query
-        .filter_by(user_id=current_user.id)
-        .order_by(URLRecord.timestamp.desc())
-        .all()
-    )
+    # Generate a nice avatar based on user's name with consistent color based on email
+    avatar_url = get_ui_avatar_url(current_user.name, current_user.email, size=256)
 
     return render_template(
         "dashboard.html",
@@ -273,11 +320,67 @@ def dashboard():
         safe_count=safe_count,
         phishing_count=phishing_count,
         recent_searches=recent_searches,
-        user=current_user
+        user=current_user,
+        avatar_url=avatar_url
     )
 
+@app.route("/details/<int:id>")
+@login_required
+def details(id):
+    """Display detailed information about a specific URL record."""
+    # Fetch the URL record and ensure it belongs to the current user
+    record = URLRecord.query.filter_by(id=id, user_id=current_user.id).first()
+    
+    if not record:
+        flash("URL record not found or you don't have permission to view it.", "error")
+        return redirect(url_for("dashboard"))
+    
+    return render_template("details.html", record=record)
 
- 
+@app.route("/about")
+def about():
+    """Display the About page."""
+    return render_template("about.html")
+
+@app.route("/contact", methods=["GET", "POST"])
+def contact():
+    """Display the Contact page and handle contact form submissions."""
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        email = request.form.get("email", "").strip()
+        message = request.form.get("message", "").strip()
+        
+        # Validate form data
+        if not name or not email or not message:
+            flash("Please fill in all fields.", "error")
+            return redirect(url_for("contact"))
+        
+        try:
+            # Send email to admin
+            msg = Message(
+                subject=f"New Contact Message from {name}",
+                recipients=[app.config['MAIL_USERNAME']],
+                body=f"Name: {name}\nEmail: {email}\n\nMessage:\n{message}"
+            )
+            mail.send(msg)
+            
+            # Send confirmation email to user
+            confirmation_msg = Message(
+                subject="We received your message",
+                recipients=[email],
+                body=f"Hi {name},\n\nThank you for contacting us. We have received your message and will get back to you soon.\n\nBest regards,\nPhishing Detection URL System Team"
+            )
+            mail.send(confirmation_msg)
+            
+            flash("Your message has been sent successfully! We will get back to you soon.", "success")
+            return redirect(url_for("contact"))
+        except Exception as e:
+            print(f"Error sending email: {e}")
+            flash(f"Failed to send message. Please try again later. Error: {str(e)}", "error")
+            return redirect(url_for("contact"))
+    
+    return render_template("contact.html")
+
 # Load configuration (reads `DATABASE_URL` env var when provided)
 app.config.from_object(Config)
 
@@ -301,43 +404,6 @@ def load_user(user_id):
         return User.query.get(int(user_id))
     except Exception:
         return None
-
-# Contact Page Route (GET)
-@app.route('/contact', methods=['GET', 'POST'])
-def contact():
-    if request.method == 'GET':
-        return render_template('contact.html')
-    
-    # POST method - handle form submission
-    name = request.form.get('name')
-    email = request.form.get('email')
-    message = request.form.get('message')
-    
-    if not all([name, email, message]):
-        flash("All fields are required", "error")
-        return redirect(url_for('contact'))
-    
-    try:
-        # Send email to admin
-        msg = Message(
-            f"New Contact Form Submission from {name}",
-            sender=app.config['MAIL_USERNAME'],
-            recipients=['Shivayawasthi02@gmail.com']
-        )
-        msg.body = f"""
-New message from: {name}
-Email: {email}
-
-Message:
-{message}
-        """
-        mail.send(msg)
-        flash("Thank you! Your message has been sent successfully.", "success")
-    except Exception as e:
-        print(f"Contact form error: {e}")
-        flash("Error sending message. Please try again later.", "error")
-    
-    return redirect(url_for('contact'))
 
 # Register blueprints
 app.register_blueprint(auth)

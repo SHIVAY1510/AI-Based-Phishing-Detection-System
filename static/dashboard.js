@@ -21,18 +21,4 @@ themeToggler.addEventListener('click',() =>{
     themeToggler.querySelector('span:nth-child(2)').classList.toggle('active');
 })
 
-
-//fill url in table
-orders.forEach(order =>{
-    const tr = document.createAttribute('tr');
-   // const trContent ='
-    
-    
-    
-    
-    
-    
-   // ';
-    tr.innerHTML =trContent;
-    document.querySelector('table tbody').appendChild(tr);
-})
+// Remove the orders.forEach code as it's not needed - data is populated via Flask template

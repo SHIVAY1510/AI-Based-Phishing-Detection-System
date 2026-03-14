@@ -3,3 +3,5 @@ flask_sqlalchemy
 flask_migrate
 flask_login
 psycopg2-binary
+python-dotenv
+flask-mail

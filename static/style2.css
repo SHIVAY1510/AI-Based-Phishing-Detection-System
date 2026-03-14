@@ -271,20 +271,16 @@ main .insights svg circle{
     stroke-width: 14;
     stroke-linecap: round;
     transform: translate(5px,5px);
-    stroke-dasharray: 110;
-    stroke-dashoffset: 92;
+    /* Removed fixed stroke-dasharray and stroke-dashoffset - now set by JavaScript */
 }
 main .insights .sales svg circle{
-    stroke-dashoffset: -30;
-    stroke-dasharray: 200;
+    /* Dynamic values set by JavaScript */
 }
 main .insights .expenses svg circle{
-    stroke-dashoffset: 20;
-    stroke-dasharray: 80;
+    /* Dynamic values set by JavaScript */
 }
 main .insights .income svg circle{
-    stroke-dashoffset: 35;
-    stroke-dasharray: 110;
+    /* Dynamic values set by JavaScript */
 }
 main .insights .progress .number{
     position: absolute;

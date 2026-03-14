@@ -218,7 +218,7 @@
                     <small class="text-muted">Admin</small>
                 </div>
                 <div class="profile-photo">
-                    <img src="static\profile-icon-white-background_941097-161065.avif">
+                    <img src="{{ avatar_url }}" alt="{{ user.name }}" style="border-radius: 50%; width: 40px; height: 40px;">
                 </div>
             </div>
           </div>
@@ -274,10 +274,10 @@
                  <div class="right">
                      <div class="info">
                           <h3>Search Url</h3>
-                         <small class="text-muted">Last 24 Hours</small>
+                         <small class="text-muted">Total Analyzed</small>
                         </div>
-                        <h5 class="sucess">+93%</h5>
-                        <h3>3824</h3>
+                        <h5 class="sucess">100%</h5>
+                        <h3>{{total_urls}}</h3>
                     </div>
                 </div>
                 <div class="item offline">
@@ -287,10 +287,10 @@
                  <div class="right">
                      <div class="info">
                           <h3>Safe Url</h3>
-                         <small class="text-muted">Last 24 Hours</small>
+                         <small class="text-muted">Legitimate Sites</small>
                         </div>
-                        <h5 class="danger">+91%</h5>
-                        <h3>1827</h3>
+                        <h5 class="danger" id="safe-percent">0%</h5>
+                        <h3>{{safe_count}}</h3>
                     </div>
                 </div>
                 <div class="item customers">
@@ -299,23 +299,23 @@
                     </div>
                  <div class="right">
                      <div class="info">
-                          <h3>Phinghing Url</h3>
-                         <small class="text-muted">Last 24 Hours</small>
+                          <h3>Phishing Url</h3>
+                         <small class="text-muted">Detected Threats</small>
                         </div>
-                        <h5 class="sucess">+95%</h5>
-                        <h3>1997</h3>
+                        <h5 class="sucess" id="phishing-percent">0%</h5>
+                        <h3>{{phishing_count}}</h3>
                     </div>
                 </div>
-                <div class="item add-project">
-                    <div>
+                <!--<div class="item add-project">
+                   <div>
                         <span class="material-symbols-outlined">add_link</span>
                         <h3>Add url</h3>
                     </div>
-                </div>
+                </div>-->
             </div>
         </div>
     </div>
-    <script src="static\dashboard.js"></script>
+    <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
     <script>
     // Values coming from Flask
     const total = {{total_urls}};
@@ -327,20 +327,32 @@
     const phishingPercent = total > 0 ? Math.round((phishing / total) * 100) : 0;
     const totalPercent = 100;  // total always considered full progress
 
+    // Update percentage displays in analytics section
+    document.getElementById('safe-percent').textContent = safePercent + '%';
+    document.getElementById('phishing-percent').textContent = phishingPercent + '%';
+
     // Function to update SVG circle progress
     function setCircleProgress(circleId, percent) {
         const circle = document.getElementById(circleId);
-        const radius = circle.r.baseVal.value;
+        if (!circle) return;
+
+        const radius = 36; // radius from HTML r='36'
         const circumference = 2 * Math.PI * radius;
 
-        circle.style.strokeDasharray = circumference;
-        circle.style.strokeDashoffset = circumference - (percent / 100) * circumference;
+        // Set the stroke-dasharray to the full circumference
+        circle.style.strokeDasharray = `${circumference}`;
+
+        // Calculate the dash offset based on percentage
+        const offset = circumference - (percent / 100) * circumference;
+        circle.style.strokeDashoffset = offset;
     }
 
-    // Apply progress animation
-    setCircleProgress("totalCircle", totalPercent);
-    setCircleProgress("safeCircle", safePercent);
-    setCircleProgress("phishCircle", phishingPercent);
+    // Apply progress animation with a slight delay to ensure DOM is ready
+    setTimeout(() => {
+        setCircleProgress("totalCircle", totalPercent);
+        setCircleProgress("safeCircle", safePercent);
+        setCircleProgress("phishcircle", phishingPercent);
+    }, 100);
 
 
 </script>

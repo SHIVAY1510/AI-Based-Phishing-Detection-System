@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Phising Website Detection</title>
     <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="/static/styles3.css">
 </head>
 <body>
      <nav class="navbar">
@@ -15,15 +16,21 @@
                 <li><a href="register">Registration</a></li>
                 <li><a href="#about">About</a></li>
                 <li><a href="#contact">Contact</a></li>
+                <li><a href="dashboard">Dashboard</a></li>
             </ul>
         </nav>
-    <div class="class">
-        <form method="POST">
-            <label for="url">Check URL</label><br/>
-            <input type="text" id="url" name="url" required><br/><br/>
-            <button>Click Here</button><br/><br/>
+        
+    <div class="class3">
+    <div class="form-box1 login">
+    <form method="POST">
+        <fieldset><legend><h1>Check URL</h1></legend>
+            <div class="input-box">
+            <input type="text" id="url" name="url" placeholder="Enter The URL" required><br/><br/>
+            <button class="btn">Click Here</button><br/><br/>
             {{prediction}}
-        </form>
+            </div>
+    </form>
+    </div>
     </div>
 </body>
 </html>
