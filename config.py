@@ -1,9 +1,9 @@
 import os
 
-class Config:
-    SQLALCHEMY_DATABASE_URL = "postgresql://postgres:1234@localhost/Database_URL"
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SECRET_KEY = "d17a6822af9ea28fe8752ac86d327113"
+# class Config:
+#     SQLALCHEMY_DATABASE_URL = "postgresql://postgres:1234@localhost/Database_URL"
+#     SQLALCHEMY_TRACK_MODIFICATIONS = False
+#     SECRET_KEY = "d17a6822af9ea28fe8752ac86d327113"
 
     #MAIL_SERVER = 'smtp.gmail.com'
     #MAIL_PORT = 587
@@ -35,3 +35,7 @@ class Config:
 #    # Enable SQLAlchemy echo when SQLALCHEMY_ECHO=1 or true in env for debugging
 #    SQLALCHEMY_ECHO = str(os.getenv("SQLALCHEMY_ECHO", "False")).lower() in ("1", "true", "yes")
 #    SECRET_KEY = os.getenv("SECRET_KEY", "d17a6822af9ea28fe8752ac86d327113")
+class Config:
+    SECRET_KEY = os.getenv("SECRET_KEY", "secret")
+    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL")
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
