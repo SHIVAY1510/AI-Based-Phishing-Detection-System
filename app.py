@@ -124,7 +124,7 @@ def reset_password(token):
 
 @app.route("/")
 def home():
-    return render_template("homepage.html")  # Ensure you have an index.html file in the templates folder 
+    return render_template("index.html")  # Ensure you have an index.html file in the templates folder
 
 @app.route("/url", methods=["GET", "POST"])
 @login_required
@@ -167,9 +167,9 @@ def url():
         else:
             print(f'Not logged in. current_user: {current_user}, authenticated: {getattr(current_user, "is_authenticated", False)}')
 
-        return render_template("index.html", prediction=my_prediction)
+        return render_template("urlcheck.html", prediction=my_prediction)
     else:
-        return render_template("index.html")
+        return render_template("urlcheck.html")
     
 # Forgot Password Route
 @app.route('/forgot-password', methods=['GET', 'POST'])
@@ -383,9 +383,6 @@ def contact():
 
 # Load configuration (reads `DATABASE_URL` env var when provided)
 app.config.from_object(Config)
-
-app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:1234@localhost/Database_URL"
-
 
 init_db(app)
 
