@@ -1,8 +1,8 @@
-flask
-flask_sqlalchemy
-flask_migrate
-flask_login
+Flask
+Flask-SQLAlchemy
+Flask-Migrate
+Flask-Login
 psycopg2-binary
 python-dotenv
-flask-mail
+Flask-Mail
 gunicorn
