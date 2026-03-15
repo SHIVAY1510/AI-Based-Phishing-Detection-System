@@ -5,11 +5,11 @@ import os
 #     SQLALCHEMY_TRACK_MODIFICATIONS = False
 #     SECRET_KEY = "d17a6822af9ea28fe8752ac86d327113"
 
-    #MAIL_SERVER = 'smtp.gmail.com'
-    #MAIL_PORT = 587
-    #MAIL_USE_TLS = True
-    #MAIL_USERNAME = 'yourgmail@gmail.com'
-    #MAIL_PASSWORD = 'gmail_app_password'  
+#     MAIL_SERVER = 'smtp.gmail.com'
+#     MAIL_PORT = 587
+#     MAIL_USE_TLS = True
+#     MAIL_USERNAME = 'yourgmail@gmail.com'
+#     MAIL_PASSWORD = 'gmail_app_password'  
 
 
 #class Config:
