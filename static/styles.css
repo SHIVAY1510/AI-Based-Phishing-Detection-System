@@ -91,7 +91,7 @@ body{
     min-height: 100vh;
     display: flex;
     align-items: center;
-    padding: 12% 5%;
+    padding: 8rem 5% 3rem;
     background: radial-gradient(circle at 75% 30%,var(--accent-glow)0%,transparent 30%);
 }
 .hero-content{
@@ -129,6 +129,11 @@ body{
     margin-bottom:2rem;
     opacity: 0.9;
     max-width: 600px;
+}
+.hero-image img{
+    width: 100%;
+    max-width: 400px;
+    height: auto;
 }
 .cta-button{
     display:inline-block;
@@ -299,12 +304,13 @@ footer{
 @media(max-width:760px){
     .hero{
         flex-direction: column;
-        text-align: center;
-        padding-top: 8rem;
+        /* text-align: center;
+        padding-top: 8rem; */
     }
     .hero-content{
-        padding-right: 0;
-        margin-bottom: 3rem;
+        /* padding-right: 0;
+        margin-bottom: 3rem; */
+        order: 2;
     }
     .profile-pic{
         width: 280px;
