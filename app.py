@@ -15,6 +15,9 @@ import pickle
 from flask_mail import Message,Mail
 from flask_login import login_required
 from itsdangerous import URLSafeTimedSerializer
+from flask_wtf.csrf import CSRFProtect        # missing — needed for CSRF protection
+from flask_limiter import Limiter              # missing — needed for rate limiting
+from flask_limiter.util import get_remote_address  # missing — needed for rate limiting
 
 # Load environment variables from .env file
 load_dotenv()
